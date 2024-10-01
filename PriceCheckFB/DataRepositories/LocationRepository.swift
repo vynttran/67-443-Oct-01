@@ -10,33 +10,27 @@ import Firebase
 import FirebaseFirestore
 
 class LocationRepository: ObservableObject {
-  // Set up properties here
-  @Published var locations: [Location] = []
-  private var db = Firestore.firestore()
-  
-  init() {
-    get()
-  }
+  private let path: String = "location_scans"
+    private let store = Firestore.firestore()
 
-  func get() {
-      db.collection("location_scans").getDocuments { (querySnapshot, error) in
-          guard let documents = querySnapshot?.documents else {
-              print("Error fetching documents: \(error?.localizedDescription ?? "Unknown error")")
-              return
+    @Published var locations: [Location] = []
+    private var cancellables: Set<AnyCancellable> = []
+
+    init() {
+      self.get()
+    }
+
+    func get() {
+      store.collection(path)
+        .addSnapshotListener { querySnapshot, error in
+          if let error = error {
+            print("Error getting locations: \(error.localizedDescription)")
+            return
           }
-          self.locations = documents.compactMap { document -> Location? in
-              let location = try? document.data(as: Location.self)
-              if var fetchedLocation = location {
-                  let modifiedScans = fetchedLocation.scans.map { scan -> PriceScan in
-                      var modifiedScan = scan
-                      modifiedScan.id = UUID(uuidString: scan.id)?.uuidString ?? UUID().uuidString
-                      return modifiedScan
-                  }
-                  fetchedLocation.scans = modifiedScans
-                  return fetchedLocation
-              }
-              return location
-          }
-      }
-  }
+
+          self.locations = querySnapshot?.documents.compactMap { document in
+            try? document.data(as: Location.self)
+          } ?? []
+        }
+    }
 }
