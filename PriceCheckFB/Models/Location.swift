@@ -5,10 +5,11 @@
 
 import Foundation
 import SwiftUI
+import Firebase
+import FirebaseFirestore
 
 struct Location: Identifiable, Codable, Comparable {
-  
-  var id: UUID
+  @DocumentID var id: String?
   var name: String
   var scans: [PriceScan]
   
@@ -29,7 +30,6 @@ struct Location: Identifiable, Codable, Comparable {
   }
   
   // MARK: Example for SwiftUI
-  static let example = Location(id: UUID(), name: "Target", scans: [PriceScan.example])
-  
+  static let example = Location(id: UUID().uuidString, name: "Target", scans: [PriceScan.example])
 }
 
